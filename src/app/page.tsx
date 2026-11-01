@@ -10,9 +10,7 @@ export default function Home() {
       <p className="mt-4">{intro}</p>
       <Link
         href={routes.consultation("genovian-pear-allergy")}
-        className="mt-8 inline-flex min-h-11 items-center rounded
-  bg-blue-700 px-6 font-semibold text-white hover:bg-blue-800
-  focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="mt-8 inline-flex min-h-11 items-center rounded bg-blue-700 px-6 font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         {startConsultation}
       </Link>

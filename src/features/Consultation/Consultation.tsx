@@ -7,6 +7,7 @@ import { useConsultation } from "./useConsultation";
 import { useId } from "react";
 import { redirect } from "next/navigation";
 import { routes } from "@/lib/routes";
+import { Button } from "@/components/Button/Button";
 
 type ConsultationProps = {
   consultation: ConsultationContent;
@@ -101,22 +102,13 @@ export function Consultation({ consultation }: ConsultationProps) {
 
       <div className="mt-8 flex gap-4">
         {!isFirstStep && (
-          <button
-            type="button"
-            onClick={back}
-            className="min-h-11 rounded border px-6 font-semibold"
-          >
+          <Button type="button" onClick={back} variant="secondary">
             {backText}
-          </button>
+          </Button>
         )}
-        <button
-          type="submit"
-          aria-disabled={status === "submitting"}
-          className="min-h-11 rounded bg-blue-700 px-6 font-semibold text-white
-  aria-disabled:opacity-60"
-        >
+        <Button type="submit" aria-disabled={status === "submitting"}>
           {!isLastStep ? continueText : submitAnswersButtonText}
-        </button>
+        </Button>
       </div>
     </form>
   );
