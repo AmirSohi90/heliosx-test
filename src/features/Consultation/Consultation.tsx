@@ -12,6 +12,14 @@ type ConsultationProps = {
 
 export function Consultation({ consultation }: ConsultationProps) {
   const {
+    yesNo,
+    thankYou,
+    progress,
+    back: backText,
+    submit: submitText,
+    continue: continueText,
+  } = copy;
+  const {
     question,
     questionNumber,
     totalQuestions,
@@ -23,14 +31,18 @@ export function Consultation({ consultation }: ConsultationProps) {
     next,
     submit,
     showValidationError,
+    status,
   } = useConsultation(consultation);
 
   const errorId = useId();
 
   const options = [
-    { value: true, label: copy.yesNo.yes },
-    { value: false, label: copy.yesNo.no },
+    { value: true, label: yesNo.yes },
+    { value: false, label: yesNo.no },
   ];
+
+  const submitAnswersButtonText =
+    status === "submitting" ? copy.submitting : copy.submit;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,13 +53,22 @@ export function Consultation({ consultation }: ConsultationProps) {
     }
   };
 
+  if (status === "submitted") {
+    return (
+      <>
+        <h1 className="text-3xl font-bold">{thankYou.heading}</h1>
+        <p className="mt-4">{thankYou.body}</p>
+      </>
+    );
+  }
+
   return (
     <form noValidate onSubmit={handleSubmit}>
       <fieldset>
         <legend>
           <span className="block text-gray-600">
             {consultation.conditionName} ·{" "}
-            {formatLocaleStringWithPlaceholders(copy.progress, {
+            {formatLocaleStringWithPlaceholders(progress, {
               current: questionNumber,
               total: totalQuestions,
             })}
@@ -58,7 +79,7 @@ export function Consultation({ consultation }: ConsultationProps) {
         {question.hint && <p className="mt-2 text-gray-600">{question.hint}</p>}
         {showValidationError && (
           <p id={errorId} className="mt-4 font-semibold text-red-700">
-            {copy.yesNo.required}
+            {yesNo.required}
           </p>
         )}
 
@@ -88,14 +109,16 @@ export function Consultation({ consultation }: ConsultationProps) {
             onClick={back}
             className="min-h-11 rounded border px-6 font-semibold"
           >
-            {copy.back}
+            {backText}
           </button>
         )}
         <button
           type="submit"
-          className="min-h-11 rounded bg-blue-700 px-6 font-semibold text-white"
+          aria-disabled={status === "submitting"}
+          className="min-h-11 rounded bg-blue-700 px-6 font-semibold text-white
+  aria-disabled:opacity-60"
         >
-          {isLastStep ? copy.submit : copy.continue}
+          {!isLastStep ? copy.continue : submitAnswersButtonText}
         </button>
       </div>
     </form>
