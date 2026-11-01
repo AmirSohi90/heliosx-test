@@ -3,6 +3,7 @@
 ## Will do
 
 ### Brief requirements
+
 - React app — Next.js (App Router) + TypeScript
 - Consultation page asking 5 yes/no questions
 - One question at a time; the next is revealed only once the current one is answered
@@ -14,6 +15,7 @@
 - README: run instructions, Node version (22), trade-offs
 
 ### Supporting decisions
+
 - **Landing page** — minimal, with a "Start consultation" link (journey step 2)
 - **Routing** — `/consultation/[condition]` with `generateStaticParams`; `notFound()` for unknown conditions
 - **Faux CMS** — `lib/cms.ts` → `getConsultation(slug)`, validated with zod, loaded in a server component and passed to the client stepper
@@ -90,6 +92,7 @@ src/
 - CMS and schema stay in `lib/` — data layer shared by the landing page and future features
 
 ### Import rules
+
 - `app/` → may import `features/`, `components/`, `lib/`
 - `features/` → may import `components/`, `lib/`; never another feature
 - `components/` → nothing app-specific
@@ -98,6 +101,7 @@ src/
 ## Won't do (noted in README)
 
 ### Excluded by the brief
+
 - Visual polish
 - Clinically realistic questions or eligibility logic
 - Localisation / i18n
@@ -106,6 +110,7 @@ src/
 - A real API / backend — the service only logs
 
 ### Our own trade-offs
+
 - **No auto-advance** — the live site auto-advances using option buttons; we use native radios + explicit Continue for correct choice semantics, the chance to change an answer before moving on, and one consistent pattern when checkbox/text questions arrive. If auto-advance is wanted, the accessible route is answer buttons that submit, not radios that advance on change (WCAG 3.2.2)
 - **No review ("check answers") step** — the brief goes straight to thank-you; first item under "with more time"
 - **No form library** — React Hook Form becomes worthwhile once question types grow; zod is used at the data boundary
@@ -114,4 +119,5 @@ src/
 - **No URL-synced steps** — browser Back leaves the flow; noted trade-off
 - **sessionStorage persistence** — stretch goal only, behind a `hydrated` flag to avoid a flash of question 1, with restored answers validated against current question ids
 - **No** auth, analytics, E2E tests (Playwright) or CI — "with more time"
+- **No Storybook** — in a real project I'd document the presentational components (`RadioGroup`, `Button`, `ErrorMessage`, etc.) in Storybook, with stories for each state (default, selected, error, disabled) and the a11y addon
 - **Committed straight to `main`** — normally I'd work on feature branches and merge via pull requests with review and CI; for a short, solo exercise built in isolation, small commits on `main` keep the history readable without the overhead
