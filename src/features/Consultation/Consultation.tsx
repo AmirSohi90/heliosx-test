@@ -4,6 +4,7 @@ import type { Consultation as ConsultationContent } from "@/lib/schema";
 import { consultation as copy } from "@/locales/en/consultation";
 import { formatLocaleStringWithPlaceholders } from "@/utils/formatLocaleString";
 import { useConsultation } from "./useConsultation";
+import { useId } from "react";
 
 type ConsultationProps = {
   consultation: ConsultationContent;
@@ -21,7 +22,10 @@ export function Consultation({ consultation }: ConsultationProps) {
     back,
     next,
     submit,
+    showValidationError,
   } = useConsultation(consultation);
+
+  const errorId = useId();
 
   const options = [
     { value: true, label: copy.yesNo.yes },
@@ -52,6 +56,11 @@ export function Consultation({ consultation }: ConsultationProps) {
         </legend>
 
         {question.hint && <p className="mt-2 text-gray-600">{question.hint}</p>}
+        {showValidationError && (
+          <p id={errorId} className="mt-4 font-semibold text-red-700">
+            {copy.yesNo.required}
+          </p>
+        )}
 
         <div className="mt-6 space-y-3">
           {options.map((option) => (
