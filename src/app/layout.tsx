@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Image from "next/image";
 import Link from "next/link";
+import { Header } from "./components/Header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,22 +32,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute
-  focus:left-4 focus:top-4 focus:z-50 focus:bg-white focus:px-4
-  focus:py-2 focus:text-black"
-        >
-          Skip to main content
-        </a>
-
-        <header className="border-b">
-          <div className="mx-auto max-w-3xl px-4 py-4">
-            <Link href="/" className="font-bold">
-              MedExpress {/* logo goes here */}
-            </Link>
-          </div>
-        </header>
+        <Header
+          homeHref="/"
+          logo={{
+            src: "/medexpress-logo.svg",
+            alt: "MedExpress home",
+            width: 184,
+            height: 40,
+          }}
+        />
 
         <main
           id="main"
