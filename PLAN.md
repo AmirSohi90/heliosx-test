@@ -18,10 +18,12 @@
 - **Routing** — `/consultation/[condition]` with `generateStaticParams`; `notFound()` for unknown conditions
 - **Faux CMS** — `lib/cms.ts` → `getConsultation(slug)`, validated with zod, loaded in a server component and passed to the client stepper
 - **Question schema** — discriminated union on a semantic `type`; only `yesNo` implemented, exhaustive `never` check
-- **State** — `useConsultation` hook wrapping `useReducer`
+- **State** — pure reducer (`consultationReducer.ts`, no React) used by a `useConsultation` hook
   - Answers keyed by question `id`, stored as `boolean`
-  - Status as a discriminated union: `answering (step) | submitting | submitted | error`
-  - Actions: `ANSWER`, `NEXT`, `BACK`, `SUBMIT_START`, `SUBMIT_SUCCESS`, `SUBMIT_ERROR`
+  - Flat `status` field: `answering | submitting | error | submitted` (submitting/error happen on the last step with the form still visible, so a union would repeat `step` in each variant)
+  - Actions: `ANSWER`, `NEXT`, `BACK`, `SUBMIT_START`, `SUBMIT_SUCCESS`, `SUBMIT_FAILURE`
+  - Validation and guards live in the reducer; invalid actions return the same state
+- **Copy** — consultation content (question text, hints) from the CMS; UI text (Yes/No, Back, Continue, errors) from a `copy.ts` object
 - **Form semantics** — one `<form>`; current question only, as a `fieldset` whose `legend` contains the question heading
 - **Answer input** — native radio buttons (Yes / No)
 - **Navigation buttons**
@@ -39,6 +41,55 @@
   - Vitest: reducer unit tests
   - React Testing Library: full happy-path flow (answer all, submit, thank you, service called with payload), validation error, Back behaviour
   - One axe check (`vitest-axe`)
+
+## Structure
+
+```
+src/
+  app/                                  # routes — thin: fetch data, notFound(), render a feature
+    layout.tsx                          # skip link, Header, <main>, Footer
+    page.tsx                            # landing
+    consultation/[condition]/
+      page.tsx
+      loading.tsx
+      error.tsx
+
+  features/
+    consultation/
+      components/
+        Consultation.tsx                # 'use client' — uses the hook, renders the current step
+        QuestionStep.tsx                # maps question.type → UI; exhaustive never check
+        ThankYou.tsx
+      hooks/
+        useConsultation.ts
+      consultationReducer.ts
+      consultationService.ts
+      copy.ts
+      __tests__/
+
+  components/                           # presentational only — props in, markup out
+    Header.tsx
+    Footer.tsx
+    Button.tsx
+    RadioGroup.tsx
+    ErrorMessage.tsx
+
+  lib/                                  # shared data layer
+    cms.ts
+    schema.ts
+    __tests__/
+```
+
+- No `src/pages/` folder — Next.js would treat it as the Pages Router
+- `RadioGroup` is generic: legend, hint, options (`{ value, label }[]`), value, error and `onChange` all come from props; it knows nothing about consultations or yes/no
+- `QuestionStep` is the adapter: `"yesNo"` → `RadioGroup` with Yes/No options from `copy.ts`, converting to/from `boolean`
+- CMS and schema stay in `lib/` — data layer shared by the landing page and future features
+
+### Import rules
+- `app/` → may import `features/`, `components/`, `lib/`
+- `features/` → may import `components/`, `lib/`; never another feature
+- `components/` → nothing app-specific
+- `lib/` → never imports from `features/`
 
 ## Won't do (noted in README)
 
