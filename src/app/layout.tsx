@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Header } from "../components/Header";
+import { Footer } from "@/components/Footer/Footer";
+import { FooterSection } from "@/components/FooterSection/FooterSection";
+import { Header } from "@/components/Header/Header";
+import { common } from "@/locales/en/common";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,18 +26,25 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const { footer } = common;
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full
-  antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:px-4 focus:py-2 focus:text-black"
+        >
+          {common.skipLink}
+        </a>
+
         <Header
           homeHref="/"
           logo={{
             src: "/medexpress-logo.svg",
-            alt: "MedExpress home",
+            alt: common.header.logoAlt,
             width: 184,
             height: 40,
           }}
@@ -43,21 +53,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main
           id="main"
           tabIndex={-1}
-          className="mx-auto w-full
-  max-w-3xl flex-1 px-4 py-8"
+          className="mx-auto w-full max-w-3xl flex-1 px-4 py-8"
         >
           {children}
         </main>
 
-        <footer className="border-t">
-          <div
-            className="mx-auto grid max-w-3xl gap-8 px-4 py-8
-  md:grid-cols-2"
-          >
-            <div>Footer column 1</div>
-            <div>Footer column 2</div>
-          </div>
-        </footer>
+        <Footer>
+          <FooterSection heading={footer.about.heading}>
+            <p>{footer.about.body}</p>
+          </FooterSection>
+          <FooterSection heading={footer.contact.heading}>
+            <p>
+              <a href={`mailto:${footer.contact.email}`} className="underline">
+                {footer.contact.email}
+              </a>
+            </p>
+            <p>{footer.contact.hours}</p>
+          </FooterSection>
+        </Footer>
       </body>
     </html>
   );
