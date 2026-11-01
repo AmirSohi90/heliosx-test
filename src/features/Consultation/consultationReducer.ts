@@ -36,6 +36,49 @@ export function createInitialState(
   };
 }
 
+export function consultationReducer(
+  state: ConsultationState,
+  action: ConsultationAction,
+): ConsultationState {
+  switch (action.type) {
+    case "ANSWER":
+      if (isLocked(state)) return state;
+      return {
+        ...state,
+        answers: { ...state.answers, [action.questionId]: action.answer },
+        showValidationError: false,
+      };
+
+    case "NEXT":
+      if (isLocked(state) || isLastStep(state)) return state;
+      if (!isCurrentAnswered(state))
+        return { ...state, showValidationError: true };
+      return { ...state, step: state.step + 1, showValidationError: false };
+
+    case "BACK":
+      if (isLocked(state) || isFirstStep(state)) return state;
+      return {
+        ...state,
+        step: state.step - 1,
+        status: "answering",
+        showValidationError: false,
+      };
+
+    case "SUBMIT_START":
+      if (isLocked(state) || !isLastStep(state)) return state;
+      if (!isComplete(state)) return { ...state, showValidationError: true };
+      return { ...state, status: "submitting", showValidationError: false };
+
+    case "SUBMIT_SUCCESS":
+      if (state.status !== "submitting") return state;
+      return { ...state, status: "submitted" };
+
+    case "SUBMIT_FAILURE":
+      if (state.status !== "submitting") return state;
+      return { ...state, status: "error" };
+  }
+}
+
 export function isCurrentAnswered(state: ConsultationState): boolean {
   return state.answers[state.questionIds[state.step]] !== undefined;
 }
@@ -52,48 +95,6 @@ export function isLastStep(state: ConsultationState): boolean {
   return state.step === state.questionIds.length - 1;
 }
 
-export function consultationReducer(
-  state: ConsultationState,
-  action: ConsultationAction,
-): ConsultationState {
-  const isLocked =
-    state.status === "submitting" || state.status === "submitted";
-
-  switch (action.type) {
-    case "ANSWER":
-      if (isLocked) return state;
-      return {
-        ...state,
-        answers: { ...state.answers, [action.questionId]: action.answer },
-        showValidationError: false,
-      };
-
-    case "NEXT":
-      if (isLocked || isLastStep(state)) return state;
-      if (!isCurrentAnswered(state))
-        return { ...state, showValidationError: true };
-      return { ...state, step: state.step + 1, showValidationError: false };
-
-    case "BACK":
-      if (isLocked || isFirstStep(state)) return state;
-      return {
-        ...state,
-        step: state.step - 1,
-        status: "answering",
-        showValidationError: false,
-      };
-
-    case "SUBMIT_START":
-      if (isLocked || !isLastStep(state)) return state;
-      if (!isComplete(state)) return { ...state, showValidationError: true };
-      return { ...state, status: "submitting", showValidationError: false };
-
-    case "SUBMIT_SUCCESS":
-      if (state.status !== "submitting") return state;
-      return { ...state, status: "submitted" };
-
-    case "SUBMIT_FAILURE":
-      if (state.status !== "submitting") return state;
-      return { ...state, status: "error" };
-  }
+export function isLocked(state: ConsultationState): boolean {
+  return state.status === "submitting" || state.status === "submitted";
 }

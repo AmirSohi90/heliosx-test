@@ -62,8 +62,7 @@ src/
         Consultation.tsx                # 'use client' — uses the hook, renders the current step
         QuestionStep.tsx                # maps question.type → UI; exhaustive never check
         ThankYou.tsx
-      hooks/
-        useConsultation.ts
+      useConsultation.ts                # hook: wires reducer + submission; no hooks/ folder for a single hook
       consultationReducer.ts
       service.ts                        # submitConsultation → console.log
       types.ts                          # ConsultationSubmission
@@ -115,3 +114,4 @@ src/
 - **No URL-synced steps** — browser Back leaves the flow; noted trade-off
 - **sessionStorage persistence** — stretch goal only, behind a `hydrated` flag to avoid a flash of question 1, with restored answers validated against current question ids
 - **No** auth, analytics, E2E tests (Playwright) or CI — "with more time"
+- **Committed straight to `main`** — normally I'd work on feature branches and merge via pull requests with review and CI; for a short, solo exercise built in isolation, small commits on `main` keep the history readable without the overhead
