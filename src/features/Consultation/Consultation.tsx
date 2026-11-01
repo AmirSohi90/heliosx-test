@@ -99,7 +99,11 @@ export function Consultation({ consultation }: ConsultationProps) {
           ))}
         </div>
       </fieldset>
-
+      {status === "error" && (
+        <p role="alert" className="mt-6 font-semibold text-red-700">
+          {copy.submitError}
+        </p>
+      )}
       <div className="mt-8 flex gap-4">
         {!isFirstStep && (
           <Button type="button" onClick={back} variant="secondary">

@@ -1,5 +1,6 @@
 export const common = {
   skipLink: "Skip to main content",
+  loading: "Loading...",
   header: {
     logoAlt: "MedExpress home",
   },

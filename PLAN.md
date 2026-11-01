@@ -38,7 +38,7 @@
   - Going Back keeps the previous answer selected
 - **Focus** — on each step, focus moves to the question heading (`tabIndex={-1}`); "Question X of 5" shown as a caption in the heading. No separate `aria-live` region (avoids double announcement)
 - **Submission** — pending state (button shows "Submitting…", form disabled) and error state with retry
-- **Thank you** — heading receives focus, no back navigation, copy explains a doctor will review the answers today
+- **Thank you** — separate static route `/consultation/[condition]/complete`; `redirect()` (replace) during render once status is `submitted`, so refresh keeps the confirmation, Back doesn't return to the form, and Next's route announcer reads the new title; copy explains a doctor will review the answers today
 - **Payload** — `{ condition, consultationVersion, answers: [{ questionId, questionText, answer }], submittedAt }`
 - **Accessibility** — landmarks (`header`/`main`/`footer`), skip link, single `h1` per view, visible focus, 44px targets, `prefers-reduced-motion`
 - **Tests**
@@ -55,15 +55,15 @@ src/
     page.tsx                            # landing
     consultation/[condition]/
       page.tsx
-      loading.tsx
-      error.tsx
+      loading.tsx                       # role="status" text; rarely seen since the page is static
+      complete/
+        page.tsx                        # thank-you page (static, own generateStaticParams)
 
   features/                             # PascalCase folders: each feature builds a component
     Consultation/
+      Consultation.tsx                  # 'use client' — the component the feature builds; uses the hook, renders the current step, redirects when submitted
       components/
-        Consultation.tsx                # 'use client' — uses the hook, renders the current step
         QuestionStep.tsx                # maps question.type → UI; exhaustive never check
-        ThankYou.tsx
       useConsultation.ts                # hook: wires reducer + submission; no hooks/ folder for a single hook
       consultationReducer.ts
       service.ts                        # submitConsultation → console.log
@@ -71,22 +71,27 @@ src/
       utils.ts                          # buildSubmission (pure: answers + content → payload)
       __tests__/
 
-  components/                           # presentational only — props in, markup out
-    Header.tsx
-    Footer.tsx
-    Button.tsx
-    RadioGroup.tsx
-    ErrorMessage.tsx
+  components/                           # presentational only — props in, markup out; one folder per component
+    Header/                             # dark bar, logo links home
+    Footer/                             # two columns at md+, stacks on mobile
+    FooterSection/                      # heading + children; section named by its heading via useId
+    Button/                             # primary/secondary; each variant styles its own disabled/aria-disabled state; type defaults to "button"
+    RadioGroup/                         # generic: string values, hint/error wired via aria-describedby
+
+  utils/
+    cn.ts                               # clsx + tailwind-merge
+    formatLocaleString.ts               # fills {placeholders} in copy strings
 
   locales/                              # UI text by language and namespace (no i18n library yet)
     en/
       home.ts                           # landing page
-      common.ts                         # skip link, header, footer, error/not-found/loading
+      common.ts                         # skip link, header, footer, loading
       consultation.ts                   # Back, Continue, Submit, Yes/No, errors, progress
 
   lib/                                  # shared data layer
     cms.ts
     schema.ts
+    routes.ts                           # single source for URLs (home, consultation, consultationComplete)
     __tests__/
 ```
 
@@ -124,5 +129,6 @@ src/
 - **No URL-synced steps** — browser Back leaves the flow; noted trade-off
 - **sessionStorage persistence** — stretch goal only, behind a `hydrated` flag to avoid a flash of question 1, with restored answers validated against current question ids
 - **No** auth, analytics, E2E tests (Playwright) or CI — "with more time"
+- **No custom error or not-found pages** — Next.js defaults are used. With more time: `error.tsx` (friendly message + "Try again" via Next 16's `retry`, error logged to a monitoring service) and `not-found.tsx` for unknown conditions. Invalid CMS data fails the build rather than reaching users, because pages are statically generated
 - **No Storybook** — in a real project I'd document the presentational components (`RadioGroup`, `Button`, `ErrorMessage`, etc.) in Storybook, with stories for each state (default, selected, error, disabled) and the a11y addon
 - **Committed straight to `main`** — normally I'd work on feature branches and merge via pull requests with review and CI; for a short, solo exercise built in isolation, small commits on `main` keep the history readable without the overhead
