@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  consultationReducer as reduce,
+  consultationReducer,
   createInitialState,
-  type ConsultationAction,
-  type ConsultationState,
+} from "../consultationReducer";
+import type {
+  ConsultationAction,
+  ConsultationState,
 } from "../consultationReducer";
 
 const ids = ["a", "b", "c"];
@@ -12,7 +14,7 @@ function run(
   actions: ConsultationAction[],
   state = createInitialState(ids),
 ): ConsultationState {
-  return actions.reduce(reduce, state);
+  return actions.reduce(consultationReducer, state);
 }
 
 const answerAndNext = (id: string): ConsultationAction[] => [
@@ -61,14 +63,14 @@ describe("consultationReducer", () => {
 
     it("does nothing on the last question", () => {
       const state = onLastStepAllAnswered();
-      expect(reduce(state, { type: "NEXT" })).toBe(state);
+      expect(consultationReducer(state, { type: "NEXT" })).toBe(state);
     });
   });
 
   describe("BACK", () => {
     it("does nothing on the first question", () => {
       const state = createInitialState(ids);
-      expect(reduce(state, { type: "BACK" })).toBe(state);
+      expect(consultationReducer(state, { type: "BACK" })).toBe(state);
     });
 
     it("returns to the previous question and keeps its answer", () => {
@@ -80,7 +82,7 @@ describe("consultationReducer", () => {
   describe("submission", () => {
     it("is ignored before the last question", () => {
       const state = run([{ type: "ANSWER", questionId: "a", answer: true }]);
-      expect(reduce(state, { type: "SUBMIT_START" })).toBe(state);
+      expect(consultationReducer(state, { type: "SUBMIT_START" })).toBe(state);
     });
 
     it("shows a validation error if the last question is unanswered", () => {
@@ -96,23 +98,29 @@ describe("consultationReducer", () => {
     });
 
     it("moves to submitting, then submitted", () => {
-      const submitting = reduce(onLastStepAllAnswered(), {
+      const submitting = consultationReducer(onLastStepAllAnswered(), {
         type: "SUBMIT_START",
       });
       expect(submitting.status).toBe("submitting");
-      expect(reduce(submitting, { type: "SUBMIT_SUCCESS" }).status).toBe(
-        "submitted",
-      );
+      expect(
+        consultationReducer(submitting, { type: "SUBMIT_SUCCESS" }).status,
+      ).toBe("submitted");
     });
 
     it("locks answers and navigation while submitting", () => {
-      const submitting = reduce(onLastStepAllAnswered(), {
+      const submitting = consultationReducer(onLastStepAllAnswered(), {
         type: "SUBMIT_START",
       });
       expect(
-        reduce(submitting, { type: "ANSWER", questionId: "c", answer: true }),
+        consultationReducer(submitting, {
+          type: "ANSWER",
+          questionId: "c",
+          answer: true,
+        }),
       ).toBe(submitting);
-      expect(reduce(submitting, { type: "BACK" })).toBe(submitting);
+      expect(consultationReducer(submitting, { type: "BACK" })).toBe(
+        submitting,
+      );
     });
 
     it("allows a retry after a failure", () => {
@@ -121,7 +129,7 @@ describe("consultationReducer", () => {
         onLastStepAllAnswered(),
       );
       expect(failed.status).toBe("error");
-      expect(reduce(failed, { type: "SUBMIT_START" }).status).toBe(
+      expect(consultationReducer(failed, { type: "SUBMIT_START" }).status).toBe(
         "submitting",
       );
     });
@@ -131,8 +139,10 @@ describe("consultationReducer", () => {
         [{ type: "SUBMIT_START" }, { type: "SUBMIT_SUCCESS" }],
         onLastStepAllAnswered(),
       );
-      expect(reduce(submitted, { type: "BACK" })).toBe(submitted);
-      expect(reduce(submitted, { type: "SUBMIT_START" })).toBe(submitted);
+      expect(consultationReducer(submitted, { type: "BACK" })).toBe(submitted);
+      expect(consultationReducer(submitted, { type: "SUBMIT_START" })).toBe(
+        submitted,
+      );
     });
   });
 });

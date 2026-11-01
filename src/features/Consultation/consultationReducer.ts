@@ -1,6 +1,6 @@
-import { AnswerValue } from "@/lib/schema";
+import type { AnswerValue, QuestionId } from "@/lib/schema";
 
-export type Answers = Record<string, AnswerValue>;
+export type Answers = Record<QuestionId, AnswerValue>;
 
 export type ConsultationStatus =
   | "answering"
@@ -9,7 +9,7 @@ export type ConsultationStatus =
   | "submitted";
 
 export type ConsultationState = {
-  questionIds: string[];
+  questionIds: QuestionId[];
   step: number;
   answers: Answers;
   status: ConsultationStatus;
@@ -17,14 +17,16 @@ export type ConsultationState = {
 };
 
 export type ConsultationAction =
-  | { type: "ANSWER"; questionId: string; answer: AnswerValue }
+  | { type: "ANSWER"; questionId: QuestionId; answer: AnswerValue }
   | { type: "NEXT" }
   | { type: "BACK" }
   | { type: "SUBMIT_START" }
   | { type: "SUBMIT_SUCCESS" }
   | { type: "SUBMIT_FAILURE" };
 
-export function createInitialState(questionIds: string[]): ConsultationState {
+export function createInitialState(
+  questionIds: QuestionId[],
+): ConsultationState {
   return {
     questionIds,
     step: 0,
@@ -40,6 +42,10 @@ export function isCurrentAnswered(state: ConsultationState): boolean {
 
 export function isComplete(state: ConsultationState): boolean {
   return state.questionIds.every((id) => state.answers[id] !== undefined);
+}
+
+export function isFirstStep(state: ConsultationState): boolean {
+  return state.step === 0;
 }
 
 export function isLastStep(state: ConsultationState): boolean {
@@ -69,7 +75,7 @@ export function consultationReducer(
       return { ...state, step: state.step + 1, showValidationError: false };
 
     case "BACK":
-      if (isLocked || state.step === 0) return state;
+      if (isLocked || isFirstStep(state)) return state;
       return {
         ...state,
         step: state.step - 1,

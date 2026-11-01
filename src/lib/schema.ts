@@ -25,5 +25,6 @@ export const consultationSchema = z
 
 export type YesNoQuestion = z.infer<typeof yesNoQuestionSchema>;
 export type Question = z.infer<typeof questionSchema>;
+export type QuestionId = Question["id"];
 export type Consultation = z.infer<typeof consultationSchema>;
 export type AnswerValue = boolean;

@@ -19,7 +19,9 @@
 - **Faux CMS** — `lib/cms.ts` → `getConsultation(slug)`, validated with zod, loaded in a server component and passed to the client stepper
 - **Question schema** — discriminated union on a semantic `type`; only `yesNo` implemented, exhaustive `never` check
 - **State** — pure reducer (`consultationReducer.ts`, no React) used by a `useConsultation` hook
-  - Answers keyed by question `id`, stored as `boolean`
+  - `Answers = Record<QuestionId, AnswerValue>` — keyed by question id; unanswered questions have no key
+  - `QuestionId = Question["id"]` (alias in `schema.ts`) used wherever a question id appears: answers, `questionIds`, the `ANSWER` action, the payload
+  - `AnswerValue = boolean` (in `schema.ts`) — one member per question type, widened as types are added; the reducer never inspects the value
   - Flat `status` field: `answering | submitting | error | submitted` (submitting/error happen on the last step with the form still visible, so a union would repeat `step` in each variant)
   - Actions: `ANSWER`, `NEXT`, `BACK`, `SUBMIT_START`, `SUBMIT_SUCCESS`, `SUBMIT_FAILURE`
   - Validation and guards live in the reducer; invalid actions return the same state
@@ -54,8 +56,8 @@ src/
       loading.tsx
       error.tsx
 
-  features/
-    consultation/
+  features/                             # PascalCase folders: each feature builds a component
+    Consultation/
       components/
         Consultation.tsx                # 'use client' — uses the hook, renders the current step
         QuestionStep.tsx                # maps question.type → UI; exhaustive never check
@@ -63,7 +65,9 @@ src/
       hooks/
         useConsultation.ts
       consultationReducer.ts
-      consultationService.ts
+      service.ts                        # submitConsultation → console.log
+      types.ts                          # ConsultationSubmission
+      utils.ts                          # buildSubmission (pure: answers + content → payload)
       copy.ts
       __tests__/
 
@@ -81,6 +85,7 @@ src/
 ```
 
 - No `src/pages/` folder — Next.js would treat it as the Pages Router
+- Feature folders are PascalCase (`features/Consultation/`) because each feature's purpose is to build a component from presentational ones; renames are done with `git mv` since macOS is case-insensitive
 - `RadioGroup` is generic: legend, hint, options (`{ value, label }[]`), value, error and `onChange` all come from props; it knows nothing about consultations or yes/no
 - `QuestionStep` is the adapter: `"yesNo"` → `RadioGroup` with Yes/No options from `copy.ts`, converting to/from `boolean`
 - CMS and schema stay in `lib/` — data layer shared by the landing page and future features
@@ -105,7 +110,8 @@ src/
 - **No auto-advance** — the live site auto-advances using option buttons; we use native radios + explicit Continue for correct choice semantics, the chance to change an answer before moving on, and one consistent pattern when checkbox/text questions arrive. If auto-advance is wanted, the accessible route is answer buttons that submit, not radios that advance on change (WCAG 3.2.2)
 - **No review ("check answers") step** — the brief goes straight to thank-you; first item under "with more time"
 - **No form library** — React Hook Form becomes worthwhile once question types grow; zod is used at the data boundary
-- **No question types beyond `yesNo`** — the schema is ready for them
+- **No question types beyond `yesNo`** — the schema is ready for them; "answered" is `!== undefined`, which will need a per-type check once multi-select or text questions arrive
+- **`QuestionId` is an alias, not a branded type** — documents intent but the compiler still accepts any string; zod's `.brand<"QuestionId">()` would catch mixed-up ids at the cost of casts in test fixtures
 - **No URL-synced steps** — browser Back leaves the flow; noted trade-off
 - **sessionStorage persistence** — stretch goal only, behind a `hydrated` flag to avoid a flash of question 1, with restored answers validated against current question ids
 - **No** auth, analytics, E2E tests (Playwright) or CI — "with more time"
