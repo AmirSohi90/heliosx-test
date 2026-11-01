@@ -1,7 +1,45 @@
-export default async function ConsultationPage() {
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getConsultation, getConsultationSlugs } from "@/lib/cms";
+
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  const slugs = await getConsultationSlugs();
+  return slugs.map((condition) => ({ condition }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ condition: string }>;
+}): Promise<Metadata> {
+  const { condition } = await params;
+  const consultation = await getConsultation(condition);
+  return {
+    title: consultation
+      ? `${consultation.conditionName} consultation`
+      : "Consultation not found",
+  };
+}
+
+export default async function ConsultationPage({
+  params,
+}: {
+  params: Promise<{ condition: string }>;
+}) {
+  const { condition } = await params;
+  const consultation = await getConsultation(condition);
+  if (!consultation) notFound();
+
   return (
     <>
-      <h1 className="text-2xl font-bold">Hello</h1>
+      <h1 className="text-2xl font-bold">
+        {consultation.conditionName} consultation
+      </h1>
+      <p className="mt-4">
+        {consultation.questions.length} questions will go here.
+      </p>
     </>
   );
 }
