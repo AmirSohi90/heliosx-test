@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer/Footer";
 import { FooterSection } from "@/components/FooterSection/FooterSection";
 import { Header } from "@/components/Header/Header";
 import { common } from "@/locales/en/common";
+import { routes } from "@/lib/routes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
 
         <Header
-          homeHref="/"
+          homeHref={routes.home}
           logo={{
             src: "/medexpress-logo.svg",
             alt: common.header.logoAlt,

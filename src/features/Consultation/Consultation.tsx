@@ -5,6 +5,8 @@ import { consultation as copy } from "@/locales/en/consultation";
 import { formatLocaleStringWithPlaceholders } from "@/utils/formatLocaleString";
 import { useConsultation } from "./useConsultation";
 import { useId } from "react";
+import { redirect } from "next/navigation";
+import { routes } from "@/lib/routes";
 
 type ConsultationProps = {
   consultation: ConsultationContent;
@@ -13,10 +15,10 @@ type ConsultationProps = {
 export function Consultation({ consultation }: ConsultationProps) {
   const {
     yesNo,
-    thankYou,
     progress,
     back: backText,
     submit: submitText,
+    submitting,
     continue: continueText,
   } = copy;
   const {
@@ -36,31 +38,26 @@ export function Consultation({ consultation }: ConsultationProps) {
 
   const errorId = useId();
 
+  if (status === "submitted") {
+    redirect(routes.consultationComplete(consultation.slug));
+  }
+
   const options = [
     { value: true, label: yesNo.yes },
     { value: false, label: yesNo.no },
   ];
 
   const submitAnswersButtonText =
-    status === "submitting" ? copy.submitting : copy.submit;
+    status === "submitting" ? submitting : submitText;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isLastStep) {
-      await submit();
-    } else {
+    if (!isLastStep) {
       next();
+      return;
     }
+    await submit();
   };
-
-  if (status === "submitted") {
-    return (
-      <>
-        <h1 className="text-3xl font-bold">{thankYou.heading}</h1>
-        <p className="mt-4">{thankYou.body}</p>
-      </>
-    );
-  }
 
   return (
     <form noValidate onSubmit={handleSubmit}>
@@ -118,7 +115,7 @@ export function Consultation({ consultation }: ConsultationProps) {
           className="min-h-11 rounded bg-blue-700 px-6 font-semibold text-white
   aria-disabled:opacity-60"
         >
-          {!isLastStep ? copy.continue : submitAnswersButtonText}
+          {!isLastStep ? continueText : submitAnswersButtonText}
         </button>
       </div>
     </form>
