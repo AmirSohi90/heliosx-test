@@ -27,7 +27,7 @@
   - Flat `status` field: `answering | submitting | error | submitted` (submitting/error happen on the last step with the form still visible, so a union would repeat `step` in each variant)
   - Actions: `ANSWER`, `NEXT`, `BACK`, `SUBMIT_START`, `SUBMIT_SUCCESS`, `SUBMIT_FAILURE`
   - Validation and guards live in the reducer; invalid actions return the same state
-- **Copy** — consultation content (question text, hints) from the CMS; UI text (Yes/No, Back, Continue, errors) from a `copy.ts` object
+- **Copy** — consultation content (question text, hints) from the CMS; UI text from `src/locales/en/`, one file per namespace (`home.ts`, `common.ts`, `consultation.ts`), created as needed. Mirrors react-i18next/next-intl namespaces so moving to a library is `.ts` → `.json` plus `t()` calls; variables use `{placeholder}` strings, not functions
 - **Form semantics** — one `<form>`; current question only, as a `fieldset` whose `legend` contains the question heading
 - **Answer input** — native radio buttons (Yes / No)
 - **Navigation buttons**
@@ -69,7 +69,6 @@ src/
       service.ts                        # submitConsultation → console.log
       types.ts                          # ConsultationSubmission
       utils.ts                          # buildSubmission (pure: answers + content → payload)
-      copy.ts
       __tests__/
 
   components/                           # presentational only — props in, markup out
@@ -78,6 +77,12 @@ src/
     Button.tsx
     RadioGroup.tsx
     ErrorMessage.tsx
+
+  locales/                              # UI text by language and namespace (no i18n library yet)
+    en/
+      home.ts                           # landing page
+      common.ts                         # skip link, header, footer, error/not-found/loading
+      consultation.ts                   # Back, Continue, Submit, Yes/No, errors, progress
 
   lib/                                  # shared data layer
     cms.ts
@@ -88,14 +93,14 @@ src/
 - No `src/pages/` folder — Next.js would treat it as the Pages Router
 - Feature folders are PascalCase (`features/Consultation/`) because each feature's purpose is to build a component from presentational ones; renames are done with `git mv` since macOS is case-insensitive
 - `RadioGroup` is generic: legend, hint, options (`{ value, label }[]`), value, error and `onChange` all come from props; it knows nothing about consultations or yes/no
-- `QuestionStep` is the adapter: `"yesNo"` → `RadioGroup` with Yes/No options from `copy.ts`, converting to/from `boolean`
+- `QuestionStep` is the adapter: `"yesNo"` → `RadioGroup` with Yes/No options from `locales/en/consultation.ts`, converting to/from `boolean`
 - CMS and schema stay in `lib/` — data layer shared by the landing page and future features
 
 ### Import rules
 
-- `app/` → may import `features/`, `components/`, `lib/`
-- `features/` → may import `components/`, `lib/`; never another feature
-- `components/` → nothing app-specific
+- `app/` → may import `features/`, `components/`, `lib/`, `locales/`
+- `features/` → may import `components/`, `lib/`, `locales/`; never another feature
+- `components/` → nothing app-specific (text arrives via props, not from `locales/`)
 - `lib/` → never imports from `features/`
 
 ## Won't do (noted in README)

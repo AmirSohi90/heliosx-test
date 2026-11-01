@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { home } from "@/locales/home";
+import { home } from "@/locales/en/home";
 
 export default function Home() {
   const { heading, intro, startConsultation } = home;
