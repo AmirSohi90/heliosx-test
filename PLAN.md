@@ -42,9 +42,11 @@
 - **Payload** — `{ condition, consultationVersion, answers: [{ questionId, questionText, answer }], submittedAt }`
 - **Accessibility** — landmarks (`header`/`main`/`footer`), skip link, single `h1` per view, visible focus, 44px targets, `prefers-reduced-motion`
 - **Tests**
-  - Vitest: reducer unit tests
-  - React Testing Library: full happy-path flow (answer all, submit, thank you, service called with payload), validation error, Back behaviour
-  - One axe check (`vitest-axe`)
+  - Unit (Vitest): reducer, `buildSubmission`, service, CMS/schema, `formatLocaleString`
+  - Feature (React Testing Library): `Consultation` with fixture data — validation error, Back keeps answers, exact payload, redirect, submission failure and retry; service and `next/navigation` mocked
+  - Pages: consultation page (static params, metadata, renders first question from the real CMS, 404 for unknown slug) and landing page (link to the consultation); async Server Components tested by calling, awaiting and rendering them
+  - axe checks (`vitest-axe`) in the default and error states
+  - Not tested: the thank-you page (static copy only) — would add with more time, alongside focus-management tests and Playwright E2E
 
 ## Structure
 
