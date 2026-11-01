@@ -30,14 +30,12 @@ export function useConsultation(consultation: Consultation) {
     dispatch({ type: "BACK" });
   };
 
-  const submitStep = async () => {
-    if (!lastStep) {
-      dispatch({ type: "NEXT" });
-      return;
-    }
+  const next = () => {
+    dispatch({ type: "NEXT" });
+  };
 
+  const submit = async () => {
     dispatch({ type: "SUBMIT_START" });
-
     if (!canSubmit) return;
 
     try {
@@ -59,6 +57,7 @@ export function useConsultation(consultation: Consultation) {
     isLastStep: lastStep,
     answer,
     back,
-    submitStep,
+    next,
+    submit,
   };
 }

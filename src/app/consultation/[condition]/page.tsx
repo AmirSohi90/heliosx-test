@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getConsultation, getConsultationSlugs } from "@/lib/cms";
+import { Consultation } from "@/features/Consultation/Consultation";
 
 export const dynamicParams = false;
 
@@ -32,14 +33,5 @@ export default async function ConsultationPage({
   const consultation = await getConsultation(condition);
   if (!consultation) notFound();
 
-  return (
-    <>
-      <h1 className="text-2xl font-bold">
-        {consultation.conditionName} consultation
-      </h1>
-      <p className="mt-4">
-        {consultation.questions.length} questions will go here.
-      </p>
-    </>
-  );
+  return <Consultation consultation={consultation} />;
 }
