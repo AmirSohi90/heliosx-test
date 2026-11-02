@@ -151,7 +151,6 @@ Base styles are for mobile, and Tailwind prefixes add changes for wider screens.
 
 ### Known limitations of the current build
 
-- **The form needs JavaScript to appear.** It stays `invisible` until saved progress has been restored, to avoid a flash of question 1. It needed JavaScript to work anyway (state, validation and submission all run in React), but the pre-rendered HTML can't be used on its own.
 - **Browser Back leaves the consultation** rather than going to the previous question, because the step isn't in the URL. Saved progress means nothing is lost; syncing the step to the URL would make Back work question by question.
 - **"Answered" means `!== undefined`.** That's correct for yes/no, but multi-select (`[]`) or text (`""`) questions will need a per-type check.
 - **`QuestionId` is a type alias, not a branded type.** It documents intent, but TypeScript still accepts any string; zod's `.brand()` would catch mixed-up ids, at the cost of casts in test fixtures.
