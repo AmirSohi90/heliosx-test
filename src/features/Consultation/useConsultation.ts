@@ -1,5 +1,5 @@
 import type { AnswerValue, Consultation } from "@/lib/schema";
-import { useReducer } from "react";
+import { useEffect, useReducer } from "react";
 import {
   consultationReducer,
   createInitialState,
@@ -10,6 +10,7 @@ import {
 } from "./consultationReducer";
 import { submitConsultation } from "./service";
 import { buildSubmission } from "./utils";
+import { clearProgress, loadProgress, saveProgress } from "./storage";
 
 export function useConsultation(consultation: Consultation) {
   const [state, dispatch] = useReducer(
@@ -21,6 +22,21 @@ export function useConsultation(consultation: Consultation) {
   const question = consultation.questions[state.step];
   const lastStep = isLastStep(state);
   const canSubmit = lastStep && isComplete(state) && !isLocked(state);
+
+  useEffect(() => {
+    dispatch({ type: "RESTORE", progress: loadProgress(consultation) });
+  }, [consultation]);
+
+  useEffect(() => {
+    if (!state.hasRestored || state.status === "submitted") return;
+    saveProgress(consultation, { step: state.step, answers: state.answers });
+  }, [
+    consultation,
+    state.hasRestored,
+    state.step,
+    state.answers,
+    state.status,
+  ]);
 
   const answer = (value: AnswerValue) => {
     dispatch({ type: "ANSWER", questionId: question.id, answer: value });
@@ -40,6 +56,7 @@ export function useConsultation(consultation: Consultation) {
 
     try {
       await submitConsultation(buildSubmission(consultation, state.answers));
+      clearProgress(consultation);
       dispatch({ type: "SUBMIT_SUCCESS" });
     } catch {
       dispatch({ type: "SUBMIT_FAILURE" });
@@ -53,6 +70,7 @@ export function useConsultation(consultation: Consultation) {
     currentAnswer: state.answers[question.id],
     status: state.status,
     showValidationError: state.showValidationError,
+    hasRestored: state.hasRestored,
     isFirstStep: isFirstStep(state),
     isLastStep: lastStep,
     answer,

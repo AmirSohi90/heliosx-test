@@ -146,3 +146,54 @@ describe("consultationReducer", () => {
     });
   });
 });
+
+describe("RESTORE", () => {
+  it("restores saved answers and step, and marks the state as restored", () => {
+    const state = consultationReducer(createInitialState(ids), {
+      type: "RESTORE",
+      progress: { step: 2, answers: { a: true, b: false } },
+    });
+    expect(state).toMatchObject({
+      step: 2,
+      answers: { a: true, b: false },
+      hasRestored: true,
+    });
+  });
+
+  it("marks the state as restored even when nothing was saved", () => {
+    const state = consultationReducer(createInitialState(ids), {
+      type: "RESTORE",
+      progress: null,
+    });
+    expect(state).toMatchObject({ step: 0, answers: {}, hasRestored: true });
+  });
+
+  it("drops answers for questions that no longer exist", () => {
+    const state = consultationReducer(createInitialState(ids), {
+      type: "RESTORE",
+      progress: { step: 0, answers: { a: true, removed: false } },
+    });
+    expect(state.answers).toEqual({ a: true });
+  });
+
+  it("never restores past the first unanswered question", () => {
+    const state = consultationReducer(createInitialState(ids), {
+      type: "RESTORE",
+      progress: { step: 2, answers: { a: true } },
+    });
+    expect(state.step).toBe(1);
+  });
+
+  it("only restores once", () => {
+    const restored = consultationReducer(createInitialState(ids), {
+      type: "RESTORE",
+      progress: { step: 1, answers: { a: true } },
+    });
+    expect(
+      consultationReducer(restored, {
+        type: "RESTORE",
+        progress: { step: 0, answers: {} },
+      }),
+    ).toBe(restored);
+  });
+});

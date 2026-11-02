@@ -14,6 +14,7 @@ export type ConsultationState = {
   answers: Answers;
   status: ConsultationStatus;
   showValidationError: boolean;
+  hasRestored: boolean;
 };
 
 export type ConsultationAction =
@@ -22,7 +23,8 @@ export type ConsultationAction =
   | { type: "BACK" }
   | { type: "SUBMIT_START" }
   | { type: "SUBMIT_SUCCESS" }
-  | { type: "SUBMIT_FAILURE" };
+  | { type: "SUBMIT_FAILURE" }
+  | { type: "RESTORE"; progress: { step: number; answers: Answers } | null };
 
 export function createInitialState(
   questionIds: QuestionId[],
@@ -33,6 +35,7 @@ export function createInitialState(
     answers: {},
     status: "answering",
     showValidationError: false,
+    hasRestored: false,
   };
 }
 
@@ -76,6 +79,31 @@ export function consultationReducer(
     case "SUBMIT_FAILURE":
       if (state.status !== "submitting") return state;
       return { ...state, status: "error" };
+
+    case "RESTORE": {
+      if (state.hasRestored || state.status !== "answering") return state;
+      if (!action.progress) return { ...state, hasRestored: true };
+
+      const answers: Answers = {};
+      for (const id of state.questionIds) {
+        const answer = action.progress.answers[id];
+        if (answer !== undefined) answers[id] = answer;
+      }
+
+      const firstUnanswered = state.questionIds.findIndex(
+        (id) => answers[id] === undefined,
+      );
+      const lastAllowedStep =
+        firstUnanswered === -1 ? state.questionIds.length - 1 : firstUnanswered;
+
+      return {
+        ...state,
+        answers,
+        step: Math.min(Math.max(action.progress.step, 0), lastAllowedStep),
+        showValidationError: false,
+        hasRestored: true,
+      };
+    }
   }
 }
 

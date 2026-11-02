@@ -10,6 +10,7 @@ import { Button } from "@/components/Button/Button";
 import { HelpText } from "@/components/HelpText/HelpText";
 import { QuestionStep } from "./components/QuestionStep";
 import { formatLocaleStringWithPlaceholders } from "@/utils/formatLocaleString";
+import { cn } from "@/utils/cn";
 
 type ConsultationProps = {
   consultation: ConsultationContent;
@@ -41,6 +42,7 @@ export function Consultation({ consultation }: ConsultationProps) {
     submit,
     showValidationError,
     status,
+    hasRestored,
   } = useConsultation(consultation);
 
   if (status === "submitted") {
@@ -63,7 +65,10 @@ export function Consultation({ consultation }: ConsultationProps) {
     <form
       noValidate
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 md:gap-4"
+      className={cn(
+        "flex flex-col gap-2 md:gap-4",
+        !hasRestored && "invisible",
+      )}
     >
       <QuestionStep
         question={question}
@@ -118,7 +123,7 @@ function QuestionStepHeading({
 }: QuestionHeadingProps) {
   return (
     <>
-      <HelpText>{progressText}</HelpText>
+      <span className="block text-gray-600">{progressText}</span>
       <h1
         ref={ref}
         tabIndex={-1}

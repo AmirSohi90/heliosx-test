@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { redirect } from "next/navigation";
@@ -44,6 +45,7 @@ describe("Consultation", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.mocked(redirect).mockClear();
+    sessionStorage.clear();
   });
 
   it("shows the first question with its progress and no Back button", () => {
@@ -169,8 +171,52 @@ describe("Consultation", () => {
     } as unknown as ConsultationContent;
     vi.spyOn(console, "error").mockImplementation(() => {});
 
-    expect(() =>
-      render(<Consultation consultation={unsupported} />),
-    ).toThrow("Unsupported question type: slider");
+    expect(() => render(<Consultation consultation={unsupported} />)).toThrow(
+      "Unsupported question type: slider",
+    );
+  });
+
+  describe("saved progress", () => {
+    // StrictMode runs effects twice on mount, as `next dev` does
+    function renderInStrictMode() {
+      return render(
+        <StrictMode>
+          <Consultation consultation={consultation} />
+        </StrictMode>,
+      );
+    }
+
+    it("restores answers and the current question after a reload", async () => {
+      const user = userEvent.setup();
+      const firstVisit = renderInStrictMode();
+      await user.click(screen.getByRole("radio", { name: "No" }));
+      await user.click(screen.getByRole("button", { name: "Continue" }));
+      firstVisit.unmount();
+
+      renderInStrictMode();
+
+      expect(
+        await screen.findByRole("heading", {
+          level: 1,
+          name: "Have you handled a Genovian pear in the last 24 hours?",
+        }),
+      ).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Back" }));
+      expect(screen.getByRole("radio", { name: "No" })).toBeChecked();
+    });
+
+    it("clears saved progress after a successful submission", async () => {
+      const { user, unmount } = renderConsultation();
+      await user.click(screen.getByRole("radio", { name: "Yes" }));
+      await user.click(screen.getByRole("button", { name: "Continue" }));
+      await user.click(screen.getByRole("radio", { name: "No" }));
+      await user.click(screen.getByRole("button", { name: "Submit" }));
+      unmount();
+
+      renderConsultation();
+
+      expect(screen.getByText(/Question 1 of 2/)).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: "Yes" })).not.toBeChecked();
+    });
   });
 });

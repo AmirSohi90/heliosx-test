@@ -39,7 +39,8 @@ describe("buildSubmission", () => {
         },
         {
           questionId: "pear-exposure",
-          questionText: "Have you handled a Genovian pear in the last 24 hours?",
+          questionText:
+            "Have you handled a Genovian pear in the last 24 hours?",
           answer: false,
         },
       ],
