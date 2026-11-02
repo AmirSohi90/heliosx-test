@@ -17,9 +17,11 @@ export function FooterSection({
     <section
       aria-labelledby={headingId}
       {...sectionProps}
-      className={cn("font-semibold", className)}
+      className={cn(className)}
     >
-      <h2 id={headingId}>{heading}</h2>
+      <h2 id={headingId} className="font-semibold">
+        {heading}
+      </h2>
       <div className="mt-2 space-y-1 text-sm">{children}</div>
     </section>
   );

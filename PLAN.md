@@ -34,13 +34,15 @@
   - Back: `type="button"`, **hidden** on the first question (not disabled — disabled buttons are skipped by keyboard and give no reason why)
   - Continue: `type="submit"` on questions 1–4
   - Submit: `type="submit"` on question 5, triggers the service call
-  - Continue/Submit are always enabled; pressing with no answer shows an inline error ("Select yes or no") linked via `aria-describedby`, and focus stays on the question (GOV.UK pattern — avoids disabled-button issues)
+  - Continue/Submit are always enabled; pressing with no answer shows an inline error ("Select yes or no") linked to the fieldset via `aria-describedby` (GOV.UK pattern — avoids disabled-button issues)
   - Going Back keeps the previous answer selected
-- **Focus** — on each step, focus moves to the question heading (`tabIndex={-1}`); "Question X of 5" shown as a caption in the heading. No separate `aria-live` region (avoids double announcement)
-- **Submission** — pending state (button shows "Submitting…", form disabled) and error state with retry
+- **Question heading** — the question is the page's `h1`, inside the `legend`, with "Condition · Question X of 5" as a caption; hint and error sit outside the legend and are linked via `aria-describedby` (read once, not repeated for every radio). The heading already has `tabIndex={-1}` and accepts a `ref`, ready for focus management (deferred — see trade-offs)
+- **Submission** — pending state (button shows "Submitting…" with `aria-disabled`, so focus isn't lost; the reducer locks answers and ignores repeat submits) and an error state (`role="alert"`) with retry
 - **Thank you** — separate static route `/consultation/[condition]/complete`; `redirect()` (replace) during render once status is `submitted`, so refresh keeps the confirmation, Back doesn't return to the form, and Next's route announcer reads the new title; copy explains a doctor will review the answers today
 - **Payload** — `{ condition, consultationVersion, answers: [{ questionId, questionText, answer }], submittedAt }`
-- **Accessibility** — landmarks (`header`/`main`/`footer`), skip link, single `h1` per view, visible focus, 44px targets, `prefers-reduced-motion`
+- **Accessibility** — landmarks (`header`/`main`/`footer`), skip link, single `h1` per view, visible focus, 44px targets, native radios (Tab enters the group, arrows move between options)
+- **Responsive (mobile-first Tailwind)** — headings scale up at `md:`/`lg:`; body text and spacing increase at `md:`; buttons are full width and stacked (Continue on top via `flex-col-reverse`, DOM order unchanged) on mobile, side by side from `sm:`; logo grows at `md:`/`lg:`; footer is two columns from `md:`; form gap 0.5rem → 1rem at `md:`. Mobile-first also covers zoom/reflow
+- **Theme** — light only; the scaffold's `prefers-color-scheme: dark` block was removed because components assume a light background
 - **Tests**
   - Unit (Vitest): reducer, `buildSubmission`, service, CMS/schema, `formatLocaleString`
   - Feature (React Testing Library): `Consultation` with fixture data — validation error, Back keeps answers, exact payload, redirect, submission failure and retry; service and `next/navigation` mocked
@@ -63,9 +65,9 @@ src/
 
   features/                             # PascalCase folders: each feature builds a component
     Consultation/
-      Consultation.tsx                  # 'use client' — the component the feature builds; uses the hook, renders the current step, redirects when submitted
-      components/
-        QuestionStep.tsx                # maps question.type → UI; exhaustive never check
+      Consultation.tsx                  # 'use client' — the one public component; flow (hook, step, buttons, submission error, redirect); private QuestionStepHeading at module level
+      components/                       # internal building blocks of the feature
+        QuestionStep.tsx                # maps question.type → UI; exhaustive never check (compile time) + throw (runtime)
       useConsultation.ts                # hook: wires reducer + submission; no hooks/ folder for a single hook
       consultationReducer.ts
       service.ts                        # submitConsultation → console.log
@@ -78,7 +80,9 @@ src/
     Footer/                             # two columns at md+, stacks on mobile
     FooterSection/                      # heading + children; section named by its heading via useId
     Button/                             # primary/secondary; each variant styles its own disabled/aria-disabled state; type defaults to "button"
-    RadioGroup/                         # generic: string values, hint/error wired via aria-describedby
+    Fieldset/                           # fieldset + legend + hint/error (HelpText) wired via aria-describedby; children are the controls; provides a guard context
+    Radio/                              # input + label (htmlFor via useId); native input props pass through; must be inside a Fieldset
+    HelpText/                           # hint | error variants
 
   utils/
     cn.ts                               # clsx + tailwind-merge
@@ -99,8 +103,10 @@ src/
 
 - No `src/pages/` folder — Next.js would treat it as the Pages Router
 - Feature folders are PascalCase (`features/Consultation/`) because each feature's purpose is to build a component from presentational ones; renames are done with `git mv` since macOS is case-insensitive
-- `RadioGroup` is generic: legend, hint, options (`{ value, label }[]`), value, error and `onChange` all come from props; it knows nothing about consultations or yes/no
-- `QuestionStep` is the adapter: `"yesNo"` → `RadioGroup` with Yes/No options from `locales/en/consultation.ts`, converting to/from `boolean`
+- `Fieldset` is generic — a group of related controls (radios now; checkboxes or day/month/year inputs later). A single text input would use a label, not a fieldset. Started as `RadioGroup`, renamed once it was clear nothing in it was radio-specific
+- `Radio` calls `useFieldsetGuard("Radio")`, which throws "Radio must be rendered inside a Fieldset". "Only Radios inside a Fieldset" isn't enforced — TypeScript can't check element types and a runtime `child.type` check breaks with wrappers
+- `QuestionStep` is the adapter: `"yesNo"` → `Fieldset` with `Radio`s mapped from Yes/No options (copy from `locales/en/consultation.ts`), using booleans directly; the string `value` attribute is for valid HTML only
+- `Consultation` passes the heading into `QuestionStep` as a `heading` prop, so each question type decides the container (legend for radios, label for a future text input)
 - CMS and schema stay in `lib/` — data layer shared by the landing page and future features
 
 ### Import rules
@@ -130,7 +136,9 @@ src/
 - **`QuestionId` is an alias, not a branded type** — documents intent but the compiler still accepts any string; zod's `.brand<"QuestionId">()` would catch mixed-up ids at the cost of casts in test fixtures
 - **No URL-synced steps** — browser Back leaves the flow; noted trade-off
 - **sessionStorage persistence** — stretch goal only, behind a `hydrated` flag to avoid a flash of question 1, with restored answers validated against current question ids
+- **No focus management between steps (yet)** — a screen reader user isn't told when the question changes. With more time: move focus to the new question's heading when the step changes (an effect comparing the previous question number, so it skips first load and survives Strict Mode's double effects), and on a validation error focus the first option in the submit handler so the linked error is announced on every press. The thank-you page doesn't need it — Next's route announcer reads its title
+- **No dark mode** — doing it properly means theme tokens and `dark:` variants per component, not just swapping the page background
 - **No** auth, analytics, E2E tests (Playwright) or CI — "with more time"
 - **No custom error or not-found pages** — Next.js defaults are used. With more time: `error.tsx` (friendly message + "Try again" via Next 16's `retry`, error logged to a monitoring service) and `not-found.tsx` for unknown conditions. Invalid CMS data fails the build rather than reaching users, because pages are statically generated
-- **No Storybook** — in a real project I'd document the presentational components (`RadioGroup`, `Button`, `ErrorMessage`, etc.) in Storybook, with stories for each state (default, selected, error, disabled) and the a11y addon
+- **No Storybook** — in a real project I'd document the presentational components (`Button`, `Fieldset`, `Radio`, `HelpText`, etc.) in Storybook, with stories for each state (default, selected, error, disabled) and the a11y addon
 - **Committed straight to `main`** — normally I'd work on feature branches and merge via pull requests with review and CI; for a short, solo exercise built in isolation, small commits on `main` keep the history readable without the overhead
