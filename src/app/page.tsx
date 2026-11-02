@@ -6,7 +6,7 @@ export default function Home() {
   const { heading, intro, startConsultation } = home;
   return (
     <>
-      <h1 className="text-3xl font-bold">{heading}</h1>
+      <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl">{heading}</h1>
       <p className="mt-4">{intro}</p>
       <Link
         href={routes.consultation("genovian-pear-allergy")}

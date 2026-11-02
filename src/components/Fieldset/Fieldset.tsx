@@ -3,22 +3,22 @@
 import { createContext, useContext, useId, type ReactNode } from "react";
 import { HelpText } from "@/components/HelpText/HelpText";
 
-type RadioGroupProps = {
+type FieldsetProps = {
   legend: ReactNode;
   hint?: string;
   error?: string;
   children: ReactNode;
 };
 
-const RadioGroupContext = createContext(false);
+const FieldsetContext = createContext(false);
 
-export function useRadioGroupGuard() {
-  if (!useContext(RadioGroupContext)) {
-    throw new Error("Radio must be rendered inside a RadioGroup");
+export function useFieldsetGuard(componentName: string) {
+  if (!useContext(FieldsetContext)) {
+    throw new Error(`${componentName} must be rendered inside a Fieldset`);
   }
 }
 
-export function RadioGroup({ legend, hint, error, children }: RadioGroupProps) {
+export function Fieldset({ legend, hint, error, children }: FieldsetProps) {
   const idPrefix = useId();
   const hintId = `${idPrefix}-hint`;
   const errorId = `${idPrefix}-error`;
@@ -27,7 +27,7 @@ export function RadioGroup({ legend, hint, error, children }: RadioGroupProps) {
     [hint && hintId, error && errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <RadioGroupContext value={true}>
+    <FieldsetContext value={true}>
       <fieldset aria-describedby={describedBy}>
         <legend>{legend}</legend>
 
@@ -38,13 +38,13 @@ export function RadioGroup({ legend, hint, error, children }: RadioGroupProps) {
         )}
 
         {error && (
-          <HelpText id={errorId} variant="error" className="mt-4">
+          <HelpText id={errorId} variant="error">
             {error}
           </HelpText>
         )}
 
-        <div className="mt-6 space-y-3">{children}</div>
+        <div className="space-y-3">{children}</div>
       </fieldset>
-    </RadioGroupContext>
+    </FieldsetContext>
   );
 }

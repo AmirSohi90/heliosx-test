@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { Radio } from "@/components/Radio/Radio";
-import { RadioGroup } from "@/components/RadioGroup/RadioGroup";
 import type { AnswerValue, Question } from "@/lib/schema";
 import { consultation as copy } from "@/locales/en/consultation";
+import { Fieldset } from "@/components/Fieldset/Fieldset";
 
 type QuestionStepProps = {
   question: Question;
@@ -27,7 +27,7 @@ export function QuestionStep({
       ];
 
       return (
-        <RadioGroup
+        <Fieldset
           legend={heading}
           hint={question.hint}
           error={showError ? copy.yesNo.required : undefined}
@@ -42,7 +42,7 @@ export function QuestionStep({
               onChange={() => onAnswer(option.value)}
             />
           ))}
-        </RadioGroup>
+        </Fieldset>
       );
     }
 

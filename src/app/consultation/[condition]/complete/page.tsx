@@ -16,7 +16,7 @@ export async function generateStaticParams() {
 export default function ConsultationCompletePage() {
   return (
     <>
-      <h1 className="text-3xl font-bold">{copy.thankYou.heading}</h1>
+      <h1 className="text-3xl font-bold md:text-4xl lg:text-5xl">{copy.thankYou.heading}</h1>
       <p className="mt-4">{copy.thankYou.body}</p>
     </>
   );

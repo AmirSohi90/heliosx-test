@@ -60,7 +60,11 @@ export function Consultation({ consultation }: ConsultationProps) {
   };
 
   return (
-    <form noValidate onSubmit={handleSubmit}>
+    <form
+      noValidate
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-2 md:gap-4"
+    >
       <QuestionStep
         question={question}
         heading={
@@ -80,17 +84,26 @@ export function Consultation({ consultation }: ConsultationProps) {
         onAnswer={answer}
       />
       {status === "error" && (
-        <HelpText variant="error" role="alert" className="mt-6">
+        <HelpText variant="error" role="alert">
           {copy.submitError}
         </HelpText>
       )}
-      <div className="mt-8 flex gap-4">
+      <div className="flex flex-col-reverse gap-4 sm:flex-row">
         {!isFirstStep && (
-          <Button type="button" onClick={back} variant="secondary">
+          <Button
+            type="button"
+            onClick={back}
+            variant="secondary"
+            className="w-full sm:w-auto"
+          >
             {backText}
           </Button>
         )}
-        <Button type="submit" aria-disabled={status === "submitting"}>
+        <Button
+          type="submit"
+          aria-disabled={status === "submitting"}
+          className="w-full sm:w-auto"
+        >
           {!isLastStep ? continueText : submitAnswersButtonText}
         </Button>
       </div>
@@ -105,8 +118,12 @@ function QuestionStepHeading({
 }: QuestionHeadingProps) {
   return (
     <>
-      <span className="block text-gray-600">{progressText}</span>
-      <h1 ref={ref} tabIndex={-1} className="mt-2 text-2xl font-bold">
+      <HelpText>{progressText}</HelpText>
+      <h1
+        ref={ref}
+        tabIndex={-1}
+        className="mt-2 text-2xl font-bold md:text-3xl lg:text-4xl"
+      >
         {questionText}
       </h1>
     </>

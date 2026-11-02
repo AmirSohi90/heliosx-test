@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, type ComponentPropsWithoutRef } from "react";
-import { useRadioGroupGuard } from "@/components/RadioGroup/RadioGroup";
+import { useFieldsetGuard } from "@/components/Fieldset/Fieldset";
 import { cn } from "@/utils/cn";
 
 type RadioProps = Omit<ComponentPropsWithoutRef<"input">, "type"> & {
@@ -9,7 +9,7 @@ type RadioProps = Omit<ComponentPropsWithoutRef<"input">, "type"> & {
 };
 
 export function Radio({ label, className, id, ...inputProps }: RadioProps) {
-  useRadioGroupGuard();
+  useFieldsetGuard("Radio");
   const generatedId = useId();
   const inputId = id ?? generatedId;
 
