@@ -1,23 +1,28 @@
 "use client";
 
+import type { Ref } from "react";
 import type { Consultation as ConsultationContent } from "@/lib/schema";
 import { consultation as copy } from "@/locales/en/consultation";
-import { formatLocaleStringWithPlaceholders } from "@/utils/formatLocaleString";
 import { useConsultation } from "./useConsultation";
-import { useId } from "react";
 import { redirect } from "next/navigation";
 import { routes } from "@/lib/routes";
 import { Button } from "@/components/Button/Button";
 import { HelpText } from "@/components/HelpText/HelpText";
+import { QuestionStep } from "./components/QuestionStep";
+import { formatLocaleStringWithPlaceholders } from "@/utils/formatLocaleString";
 
 type ConsultationProps = {
   consultation: ConsultationContent;
 };
 
+type QuestionHeadingProps = {
+  progressText: string;
+  questionText: string;
+  ref?: Ref<HTMLHeadingElement>;
+};
+
 export function Consultation({ consultation }: ConsultationProps) {
   const {
-    yesNo,
-    progress,
     back: backText,
     submit: submitText,
     submitting,
@@ -38,16 +43,9 @@ export function Consultation({ consultation }: ConsultationProps) {
     status,
   } = useConsultation(consultation);
 
-  const errorId = useId();
-
   if (status === "submitted") {
     redirect(routes.consultationComplete(consultation.slug));
   }
-
-  const options = [
-    { value: true, label: yesNo.yes },
-    { value: false, label: yesNo.no },
-  ];
 
   const submitAnswersButtonText =
     status === "submitting" ? submitting : submitText;
@@ -63,45 +61,24 @@ export function Consultation({ consultation }: ConsultationProps) {
 
   return (
     <form noValidate onSubmit={handleSubmit}>
-      <fieldset>
-        <legend>
-          <span className="block text-gray-600">
-            {consultation.conditionName} ·{" "}
-            {formatLocaleStringWithPlaceholders(progress, {
-              current: questionNumber,
-              total: totalQuestions,
-            })}
-          </span>
-          <h1 className="mt-2 text-2xl font-bold">{question.text}</h1>
-        </legend>
-
-        {question.hint && (
-          <HelpText className="mt-2">{question.hint}</HelpText>
-        )}
-        {showValidationError && (
-          <HelpText id={errorId} variant="error" className="mt-4">
-            {yesNo.required}
-          </HelpText>
-        )}
-
-        <div className="mt-6 space-y-3">
-          {options.map((option) => (
-            <label
-              key={option.label}
-              className="flex min-h-11 cursor-pointer items-center gap-3"
-            >
-              <input
-                type="radio"
-                name={question.id}
-                checked={currentAnswer === option.value}
-                onChange={() => answer(option.value)}
-                className="size-6"
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <QuestionStep
+        question={question}
+        heading={
+          <QuestionStepHeading
+            questionText={question.text}
+            progressText={`${consultation.conditionName} · ${formatLocaleStringWithPlaceholders(
+              copy.progress,
+              {
+                current: questionNumber,
+                total: totalQuestions,
+              },
+            )}`}
+          />
+        }
+        value={currentAnswer}
+        showError={showValidationError}
+        onAnswer={answer}
+      />
       {status === "error" && (
         <HelpText variant="error" role="alert" className="mt-6">
           {copy.submitError}
@@ -118,5 +95,20 @@ export function Consultation({ consultation }: ConsultationProps) {
         </Button>
       </div>
     </form>
+  );
+}
+
+function QuestionStepHeading({
+  progressText,
+  questionText,
+  ref,
+}: QuestionHeadingProps) {
+  return (
+    <>
+      <span className="block text-gray-600">{progressText}</span>
+      <h1 ref={ref} tabIndex={-1} className="mt-2 text-2xl font-bold">
+        {questionText}
+      </h1>
+    </>
   );
 }

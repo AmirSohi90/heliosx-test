@@ -144,4 +144,33 @@ describe("Consultation", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it("links the hint and the validation error to the question for screen readers", async () => {
+    const { user } = renderConsultation();
+    const group = screen.getByRole("group", {
+      name: /Does your wrist ache after a royal parade\?/,
+    });
+
+    expect(group).toHaveAccessibleDescription(
+      "Include state visits and coronations.",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(group).toHaveAccessibleDescription(
+      "Include state visits and coronations. Select yes or no",
+    );
+  });
+
+  it("throws for a question type it doesn't support", () => {
+    const unsupported = {
+      ...consultation,
+      questions: [{ ...consultation.questions[0], type: "slider" }],
+    } as unknown as ConsultationContent;
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() =>
+      render(<Consultation consultation={unsupported} />),
+    ).toThrow("Unsupported question type: slider");
+  });
 });
