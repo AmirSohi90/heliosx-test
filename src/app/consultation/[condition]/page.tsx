@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getConsultation, getConsultationSlugs } from "@/lib/cms";
-import { Consultation } from "@/features/Consultation/Consultation";
+import { Consultation } from "@/features/Consultation";
 
 export const dynamicParams = false;
 
