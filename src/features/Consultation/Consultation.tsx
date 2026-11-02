@@ -8,6 +8,7 @@ import { useId } from "react";
 import { redirect } from "next/navigation";
 import { routes } from "@/lib/routes";
 import { Button } from "@/components/Button/Button";
+import { HelpText } from "@/components/HelpText/HelpText";
 
 type ConsultationProps = {
   consultation: ConsultationContent;
@@ -74,11 +75,13 @@ export function Consultation({ consultation }: ConsultationProps) {
           <h1 className="mt-2 text-2xl font-bold">{question.text}</h1>
         </legend>
 
-        {question.hint && <p className="mt-2 text-gray-600">{question.hint}</p>}
+        {question.hint && (
+          <HelpText className="mt-2">{question.hint}</HelpText>
+        )}
         {showValidationError && (
-          <p id={errorId} className="mt-4 font-semibold text-red-700">
+          <HelpText id={errorId} variant="error" className="mt-4">
             {yesNo.required}
-          </p>
+          </HelpText>
         )}
 
         <div className="mt-6 space-y-3">
@@ -100,9 +103,9 @@ export function Consultation({ consultation }: ConsultationProps) {
         </div>
       </fieldset>
       {status === "error" && (
-        <p role="alert" className="mt-6 font-semibold text-red-700">
+        <HelpText variant="error" role="alert" className="mt-6">
           {copy.submitError}
-        </p>
+        </HelpText>
       )}
       <div className="mt-8 flex gap-4">
         {!isFirstStep && (
